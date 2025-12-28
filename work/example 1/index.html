@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Example 1 — Labs</title>
+  <link rel="stylesheet" href="../../styles.css" />
+  <style>
+    /* Page-specific layout */
+    .case {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 22px 18px 60px;
+    }
+
+    .case__top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .case__back {
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-weight: 700;
+      color: rgba(0,0,0,0.75);
+    }
+    .case__back:hover { color: rgba(0,0,0,0.95); }
+
+    .case__hero {
+      background: #ff00a8; /* placeholder */
+      aspect-ratio: 16/9;
+      width: 100%;
+      margin: 12px 0 18px;
+    }
+
+    .case__grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 22px;
+    }
+
+    .case__panel {
+      background: rgba(255,255,255,0.25);
+      padding: 18px;
+    }
+
+    @media (max-width: 900px){
+      .case__grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="case">
+    <div class="case__top">
+      <a class="case__back" href="../../index.html#work">Back</a>
+      <div style="text-transform:uppercase; font-weight:700; letter-spacing:.03em; opacity:.8;">Social</div>
+    </div>
+
+    <h1 style="margin:0; text-transform:uppercase; letter-spacing:.03em;">Example 1</h1>
+
+    <div class="case__hero" aria-label="Case study hero media"></div>
+
+    <section class="case__grid">
+      <div class="case__panel">
+        <h2 style="margin-top:0;">Overview</h2>
+        <p>Add your case study narrative here: the problem, what you did, what changed.</p>
+
+        <h2>What we delivered</h2>
+        <ul>
+          <li>Deliverable 1</li>
+          <li>Deliverable 2</li>
+          <li>Deliverable 3</li>
+        </ul>
+
+        <h2>Gallery / Results</h2>
+        <p>Drop in images, embeds, before/after, etc.</p>
+      </div>
+
+      <aside class="case__panel">
+        <h2 style="margin-top:0;">Details</h2>
+        <p><strong>Client:</strong> Name</p>
+        <p><strong>Scope:</strong> Social / Content / Strategy</p>
+        <p><strong>Date:</strong> 2025</p>
+        <p><strong>Role:</strong> Creative Direction, Photo, etc.</p>
+
+        <h2>Links</h2>
+        <p><a href="#" target="_blank" rel="noreferrer">Live</a></p>
+      </aside>
+    </section>
+  </main>
+
+</body>
+</html>
