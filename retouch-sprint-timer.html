@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#ece8df" />
+  <title>Retouch Sprint</title>
+  <style>
+    :root{
+      --bg:#ece8df;
+      --panel:#f5f2eb;
+      --ink:#1e2320;
+      --muted:#6f746f;
+      --line:rgba(30,35,32,.12);
+      --accent:#53695b;
+      --accent-soft:#dfe7df;
+      --warning:#d8843e;
+      --danger:#b9332f;
+      --danger-deep:#7f1717;
+      --done:#2f7a4e;
+      --shadow:0 16px 50px rgba(20,24,21,.08);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--ink);
+      overflow:hidden;
+      transition:background-color .5s ease, color .35s ease;
+    }
+
+    button,input{font:inherit}
+    button{cursor:pointer}
+
+    .app{
+      min-height:100vh;
+      display:grid;
+      grid-template-rows:auto 1fr auto;
+      gap:18px;
+      padding:24px;
+      position:relative;
+      z-index:1;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      min-height:42px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .brand-dot{
+      width:9px;height:9px;border-radius:50%;
+      background:var(--accent);
+      box-shadow:0 0 0 5px rgba(83,105,91,.12);
+    }
+
+    .stats{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .stat{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.26);
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      color:var(--muted);
+      backdrop-filter:blur(8px);
+    }
+
+    .stat strong{color:var(--ink);font-weight:700}
+
+    .main{
+      min-height:0;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(240px,330px);
+      gap:18px;
+    }
+
+    .timer-panel,.progress-panel{
+      border:1px solid var(--line);
+      border-radius:26px;
+      background:rgba(255,255,255,.28);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(10px);
+    }
+
+    .timer-panel{
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      padding:32px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .timer-kicker{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:14px;
+      letter-spacing:.04em;
+    }
+
+    .timer{
+      font-variant-numeric:tabular-nums;
+      font-size:clamp(84px, 16vw, 230px);
+      line-height:.86;
+      font-weight:750;
+      letter-spacing:-.07em;
+      transition:transform .2s ease, color .3s ease;
+      white-space:nowrap;
+    }
+
+    .timer.overtime-prefix::before{
+      content:"+";
+      font-size:.45em;
+      vertical-align:top;
+      margin-right:.08em;
+      opacity:.82;
+    }
+
+    .message{
+      margin-top:28px;
+      max-width:760px;
+      text-align:center;
+      font-size:clamp(18px,2.2vw,32px);
+      line-height:1.18;
+      font-weight:650;
+      letter-spacing:-.025em;
+      min-height:2.4em;
+    }
+
+    .submessage{
+      margin-top:10px;
+      max-width:620px;
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      min-height:20px;
+    }
+
+    .pacebar-wrap{
+      width:min(520px,80%);
+      margin-top:30px;
+    }
+
+    .pace-label{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      font-size:11px;
+      color:var(--muted);
+      margin-bottom:8px;
+      text-transform:uppercase;
+      letter-spacing:.07em;
+      font-weight:700;
+    }
+
+    .pacebar{
+      height:7px;
+      background:rgba(30,35,32,.08);
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .pacebar > div{
+      height:100%;
+      width:0%;
+      background:var(--accent);
+      border-radius:inherit;
+      transition:width .4s linear, background-color .25s ease;
+    }
+
+    .progress-panel{
+      min-height:0;
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .progress-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      padding:4px 2px 16px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .progress-title{
+      font-size:13px;
+      font-weight:750;
+    }
+
+    .remaining-big{
+      margin-top:4px;
+      font-size:34px;
+      line-height:1;
+      font-weight:750;
+      letter-spacing:-.04em;
+    }
+
+    .remaining-label{
+      font-size:11px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.07em;
+      font-weight:700;
+      margin-top:5px;
+    }
+
+    .progress-list{
+      flex:1;
+      overflow:auto;
+      padding:14px 2px 4px;
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:7px;
+      align-content:start;
+      scrollbar-width:thin;
+    }
+
+    .photo-chip{
+      min-height:38px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      color:var(--muted);
+      font-size:11px;
+      font-variant-numeric:tabular-nums;
+      background:rgba(255,255,255,.18);
+      transition:all .22s ease;
+    }
+
+    .photo-chip.current{
+      color:var(--ink);
+      border-color:rgba(83,105,91,.5);
+      background:var(--accent-soft);
+      box-shadow:inset 0 0 0 1px rgba(83,105,91,.12);
+      font-weight:700;
+    }
+
+    .photo-chip.done{
+      color:white;
+      border-color:transparent;
+      background:var(--done);
+      transform:scale(.96);
+    }
+
+    .tick{
+      display:none;
+      font-size:12px;
+      font-weight:900;
+    }
+
+    .photo-chip.done .tick{display:inline}
+    .photo-chip.done .num{opacity:.9}
+
+    .controls{
+      display:grid;
+      grid-template-columns:auto minmax(260px,1fr) auto;
+      align-items:center;
+      gap:12px;
+    }
+
+    .secondary-btn,.primary-btn{
+      border:none;
+      border-radius:16px;
+      min-height:60px;
+      padding:0 20px;
+      font-weight:750;
+      transition:transform .15s ease, background .2s ease, color .2s ease;
+    }
+
+    .secondary-btn{
+      background:rgba(255,255,255,.32);
+      color:var(--ink);
+      border:1px solid var(--line);
+      min-width:116px;
+    }
+
+    .secondary-btn:hover,.primary-btn:hover{transform:translateY(-1px)}
+    .secondary-btn:active,.primary-btn:active{transform:translateY(1px)}
+
+    .primary-btn{
+      background:var(--ink);
+      color:#fff;
+      font-size:16px;
+      letter-spacing:-.01em;
+    }
+
+    .primary-btn .hint{
+      opacity:.55;
+      font-weight:600;
+      margin-left:8px;
+      font-size:12px;
+    }
+
+    .finish-note{
+      text-align:right;
+      color:var(--muted);
+      font-size:12px;
+      min-width:116px;
+    }
+
+    .setup{
+      position:fixed;
+      inset:0;
+      z-index:10;
+      display:grid;
+      place-items:center;
+      background:#e8e3d9;
+      padding:24px;
+    }
+
+    .setup-card{
+      width:min(680px,100%);
+      background:#f6f2ea;
+      border:1px solid rgba(30,35,32,.12);
+      border-radius:28px;
+      box-shadow:0 30px 90px rgba(30,35,32,.14);
+      padding:34px;
+    }
+
+    .setup-eyebrow{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.09em;
+      font-weight:800;
+      color:#667064;
+      margin-bottom:12px;
+    }
+
+    .setup h1{
+      margin:0;
+      font-size:clamp(38px,7vw,72px);
+      letter-spacing:-.055em;
+      line-height:.92;
+    }
+
+    .setup p{
+      margin:18px 0 28px;
+      color:#666c67;
+      line-height:1.5;
+      max-width:570px;
+      font-size:15px;
+    }
+
+    .fields{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    label{
+      display:block;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.07em;
+      color:#6b706c;
+      font-weight:800;
+      margin-bottom:7px;
+    }
+
+    input{
+      width:100%;
+      border:1px solid rgba(30,35,32,.13);
+      background:#fffdf8;
+      color:#1e2320;
+      border-radius:14px;
+      padding:14px 15px;
+      outline:none;
+      font-size:16px;
+    }
+
+    input:focus{
+      border-color:#6f8577;
+      box-shadow:0 0 0 3px rgba(111,133,119,.12);
+    }
+
+    .wide{grid-column:1/-1}
+
+    .start-btn{
+      width:100%;
+      margin-top:18px;
+      border:0;
+      border-radius:16px;
+      min-height:58px;
+      background:#1f2521;
+      color:white;
+      font-weight:800;
+      font-size:16px;
+    }
+
+    .setup-small{
+      margin-top:12px;
+      font-size:12px;
+      color:#777c77;
+      line-height:1.45;
+    }
+
+    .reward-flash{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      display:grid;
+      place-items:center;
+      z-index:20;
+      opacity:0;
+    }
+
+    .reward-word{
+      padding:13px 18px;
+      background:rgba(255,255,255,.9);
+      color:#1e2320;
+      border-radius:999px;
+      font-size:18px;
+      font-weight:800;
+      box-shadow:0 12px 40px rgba(0,0,0,.12);
+      transform:translateY(8px) scale(.96);
+    }
+
+    .reward-flash.show{
+      animation:flash 850ms ease forwards;
+    }
+
+    .reward-flash.show .reward-word{
+      animation:word 850ms ease forwards;
+    }
+
+    @keyframes flash{
+      0%{opacity:0} 16%{opacity:1} 70%{opacity:1} 100%{opacity:0}
+    }
+    @keyframes word{
+      0%{transform:translateY(8px) scale(.96)}
+      22%{transform:translateY(0) scale(1)}
+      100%{transform:translateY(-8px) scale(.98)}
+    }
+
+    /* State themes */
+    body.state-normal{
+      --bg:#ece8df;
+      --ink:#1e2320;
+      --muted:#6f746f;
+      --accent:#53695b;
+      --accent-soft:#dfe7df;
+      --line:rgba(30,35,32,.12);
+    }
+
+    body.state-final-minute{
+      --bg:#dfb56e;
+      --ink:#271d10;
+      --muted:#5c4730;
+      --accent:#7b4d1d;
+      --accent-soft:rgba(255,255,255,.22);
+      --line:rgba(39,29,16,.16);
+    }
+
+    body.state-overtime{
+      --bg:#c64b43;
+      --ink:#fff6ef;
+      --muted:#f4d0c9;
+      --accent:#fff4e7;
+      --accent-soft:rgba(255,255,255,.12);
+      --line:rgba(255,255,255,.2);
+    }
+
+    body.state-overtime .timer-panel,
+    body.state-overtime .progress-panel,
+    body.state-overtime .stat,
+    body.state-overtime .secondary-btn{
+      background:rgba(60,0,0,.12);
+    }
+
+    body.state-overtime-deep{
+      --bg:#7c1717;
+      --ink:#fff8f3;
+      --muted:#edc7c2;
+      --accent:#ffd6a5;
+      --accent-soft:rgba(255,255,255,.11);
+      --line:rgba(255,255,255,.22);
+    }
+
+    body.state-overtime-deep .timer{
+      animation:pulse 1.25s ease-in-out infinite;
+    }
+
+    body.state-finish{
+      --bg:#dce8dd;
+      --ink:#17301f;
+      --muted:#617267;
+      --accent:#2f7a4e;
+      --accent-soft:#cbe0cf;
+      --line:rgba(23,48,31,.13);
+    }
+
+    @keyframes pulse{
+      0%,100%{transform:scale(1)}
+      50%{transform:scale(1.018)}
+    }
+
+
+    .stretch-overlay{
+      position:fixed;
+      inset:0;
+      z-index:30;
+      display:grid;
+      place-items:center;
+      background:rgba(29,39,34,.96);
+      color:#fffdf8;
+      padding:24px;
+    }
+
+    .stretch-card{
+      width:min(680px,100%);
+      text-align:center;
+    }
+
+    .stretch-kicker{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      font-weight:800;
+      opacity:.65;
+      margin-bottom:16px;
+    }
+
+    .stretch-card h2{
+      margin:0;
+      font-size:clamp(52px,9vw,108px);
+      line-height:.9;
+      letter-spacing:-.055em;
+    }
+
+    .stretch-card p{
+      margin:22px auto 28px;
+      max-width:560px;
+      font-size:18px;
+      line-height:1.45;
+      opacity:.78;
+    }
+
+    .stretch-btn{
+      border:0;
+      border-radius:16px;
+      min-height:58px;
+      padding:0 24px;
+      background:#fffdf8;
+      color:#1e2320;
+      font-weight:800;
+      font-size:16px;
+    }
+
+    .stretch-hint{
+      margin-top:13px;
+      font-size:12px;
+      opacity:.55;
+    }
+
+    .hidden{display:none !important}
+
+    @media (max-width:900px){
+      body{overflow:auto}
+      .app{min-height:100dvh;overflow:visible;padding:14px;gap:12px}
+      .topbar{align-items:flex-start;flex-direction:column}
+      .stats{justify-content:flex-start}
+      .main{grid-template-columns:1fr}
+      .timer-panel{min-height:58vh;padding:24px 16px}
+      .progress-panel{max-height:240px}
+      .progress-list{grid-template-columns:repeat(6,minmax(0,1fr))}
+      .controls{grid-template-columns:1fr 2fr}
+      .finish-note{display:none}
+      .fields{grid-template-columns:1fr}
+      .wide{grid-column:auto}
+      .setup-card{padding:24px}
+    }
+
+    @media (max-width:560px){
+      .timer{font-size:clamp(78px,27vw,150px)}
+      .progress-list{grid-template-columns:repeat(5,minmax(0,1fr))}
+      .stats{gap:6px}
+      .stat{padding:7px 9px}
+      .controls{grid-template-columns:1fr}
+      .secondary-btn{order:2}
+      .primary-btn{order:1}
+    }
+  </style>
+</head>
+<body class="state-normal">
+  <section class="setup" id="setup">
+    <div class="setup-card">
+      <div class="setup-eyebrow">Retouch Sprint</div>
+      <h1>One image.<br>Five minutes.</h1>
+      <p>
+        Set a batch and keep moving. The timer is deliberately calm until the final minute,
+        then increasingly hard to ignore in overtime. Space or Enter completes the current
+        image and immediately starts the next.
+      </p>
+
+      <div class="fields">
+        <div class="wide">
+          <label for="batchName">Batch name</label>
+          <input id="batchName" value="Artisan du Chocolat" placeholder="e.g. Artisan du Chocolat" />
+        </div>
+        <div>
+          <label for="batchSize">Photos in this batch</label>
+          <input id="batchSize" type="number" min="1" max="500" value="36" />
+        </div>
+        <div>
+          <label for="targetMinutes">Target per photo (minutes)</label>
+          <input id="targetMinutes" type="number" min="1" max="60" step="0.5" value="5" />
+        </div>
+      </div>
+
+      <button class="start-btn" id="startBtn">Start batch</button>
+      <div class="setup-small">
+        Tip: use <strong>Space</strong> or <strong>Enter</strong> as your “done, next image” trigger.
+        Press <strong>P</strong> to pause. Progress is saved in this browser automatically.
+      </div>
+    </div>
+  </section>
+
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span id="batchLabel">Retouch Sprint</span>
+      </div>
+
+      <div class="stats">
+        <div class="stat">Done <strong id="doneStat">0</strong></div>
+        <div class="stat">Average <strong id="avgStat">—</strong></div>
+        <div class="stat">On target <strong id="targetStat">—</strong></div>
+        <div class="stat">Projected remaining <strong id="projectedStat">—</strong></div>
+      </div>
+    </header>
+
+    <section class="main">
+      <div class="timer-panel">
+        <div class="timer-kicker" id="timerKicker">PHOTO 1</div>
+        <div class="timer" id="timer">05:00</div>
+        <div class="message" id="message">Keep the pass clean. Keep moving.</div>
+        <div class="submessage" id="submessage">Social-sized output. Make the visible decisions first.</div>
+
+        <div class="pacebar-wrap">
+          <div class="pace-label">
+            <span>Current image</span>
+            <span id="paceText">0%</span>
+          </div>
+          <div class="pacebar"><div id="paceFill"></div></div>
+        </div>
+      </div>
+
+      <aside class="progress-panel">
+        <div class="progress-head">
+          <div>
+            <div class="progress-title" id="progressTitle">Batch progress</div>
+            <div class="remaining-big" id="remainingBig">36</div>
+            <div class="remaining-label">photos left</div>
+          </div>
+          <div style="text-align:right">
+            <div class="progress-title" id="percentDone">0%</div>
+            <div class="remaining-label">complete</div>
+          </div>
+        </div>
+        <div class="progress-list" id="progressList"></div>
+      </aside>
+    </section>
+
+    <footer class="controls">
+      <button class="secondary-btn" id="pauseBtn">Pause</button>
+      <button class="primary-btn" id="nextBtn">
+        ✓ Done — next image <span class="hint">Space / Enter</span>
+      </button>
+      <div class="finish-note" id="finishNote">Keep the hand moving.</div>
+    </footer>
+  </main>
+
+
+  <section class="stretch-overlay hidden" id="stretchOverlay">
+    <div class="stretch-card">
+      <div class="stretch-kicker">20 minute checkpoint</div>
+      <h2>Stand up.<br>Stretch.<br>Drink water.</h2>
+      <p>
+        You’ve finished the image, so this is the break point. Move for a minute or two,
+        reset your eyes, then come straight back into the next image.
+      </p>
+      <button class="stretch-btn" id="stretchBtn">Back to the next image</button>
+      <div class="stretch-hint">Space / Enter resumes</div>
+    </div>
+  </section>
+
+  <div class="reward-flash" id="rewardFlash">
+    <div class="reward-word" id="rewardWord">Nice. Next.</div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "retouchSprint_v1";
+
+    const el = {
+      setup: document.getElementById("setup"),
+      batchName: document.getElementById("batchName"),
+      batchSize: document.getElementById("batchSize"),
+      targetMinutes: document.getElementById("targetMinutes"),
+      startBtn: document.getElementById("startBtn"),
+      batchLabel: document.getElementById("batchLabel"),
+      doneStat: document.getElementById("doneStat"),
+      avgStat: document.getElementById("avgStat"),
+      targetStat: document.getElementById("targetStat"),
+      projectedStat: document.getElementById("projectedStat"),
+      timerKicker: document.getElementById("timerKicker"),
+      timer: document.getElementById("timer"),
+      message: document.getElementById("message"),
+      submessage: document.getElementById("submessage"),
+      paceText: document.getElementById("paceText"),
+      paceFill: document.getElementById("paceFill"),
+      remainingBig: document.getElementById("remainingBig"),
+      percentDone: document.getElementById("percentDone"),
+      progressList: document.getElementById("progressList"),
+      pauseBtn: document.getElementById("pauseBtn"),
+      nextBtn: document.getElementById("nextBtn"),
+      finishNote: document.getElementById("finishNote"),
+      rewardFlash: document.getElementById("rewardFlash"),
+      rewardWord: document.getElementById("rewardWord"),
+      stretchOverlay: document.getElementById("stretchOverlay"),
+      stretchBtn: document.getElementById("stretchBtn"),
+    };
+
+    let state = {
+      batchName: "Artisan du Chocolat",
+      total: 36,
+      targetMs: 5 * 60 * 1000,
+      completed: 0,
+      durations: [],
+      startedAt: null,
+      pauseStartedAt: null,
+      pausedAccumulatedMs: 0,
+      running: false,
+      paused: false,
+      finished: false,
+      lastMinuteAlerted: false,
+      activeWorkMs: 0,
+      activeWorkStartedAt: null,
+      lastStretchAtMs: 0,
+      stretchDue: false,
+      stretchOpen: false
+    };
+
+    const normalMessages = [
+      ["Keep the pass clean. Keep moving.", "Social-sized output. Make the visible decisions first."],
+      ["One image, one decision at a time.", "Exposure. Colour. Crop. Retouch what actually reads."],
+      ["Good enough at phone size is the brief.", "Do not spend print-resolution time on social-resolution output."],
+      ["Momentum beats microscopic perfection.", "Finish the visible work. Leave the invisible work alone."]
+    ];
+
+    const finalMinuteMessages = [
+      ["Final minute. Make the call.", "Resolve the obvious issue and export."],
+      ["You are close enough. Finish it.", "Do not invent another problem to solve."],
+      ["Last sixty seconds.", "One clean decision, then move on."]
+    ];
+
+    const overtimeMessages = [
+      ["Overtime. Is this change visible on a phone?", "If not, stop touching it."],
+      ["It’s for social media. Don’t sweat the small stuff.", "The image needs to work, not survive forensic inspection."],
+      ["The sooner you move on, the sooner you get your freedom back.", "Finish the pass. Export. Next."],
+      ["Stop polishing invisible pixels.", "Perfection here is stealing time from the whole batch."],
+      ["Is this extra work worth $10,000?", "If the answer is no, move on."],
+      ["You already solved the image.", "Do not turn a completed decision into another ten minutes."]
+    ];
+
+    const deepOvertimeMessages = [
+      ["MOVE ON.", "You are spending tomorrow’s time on one social image."],
+      ["EXPORT IT.", "The batch matters more than this pixel."],
+      ["THIS IMAGE IS DONE ENOUGH.", "Your job now is throughput, not archaeology."],
+      ["STOP. SAVE. NEXT.", "Do not donate another minute to invisible detail."]
+    ];
+
+    const rewardMessages = [
+      "Nice. Next.",
+      "Good. Keep the chain going.",
+      "Done. One less.",
+      "That’s momentum.",
+      "Clean finish. Next.",
+      "Bank it. Move."
+    ];
+
+    const finishMessages = [
+      "Final stretch. Keep the rhythm.",
+      "You can see the end now.",
+      "Nearly there. Protect the momentum.",
+      "Finish the batch, then stop.",
+      "Last few. No perfection detours."
+    ];
+
+    function formatTime(ms, overtime=false){
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+      return `${String(mins).padStart(2,"0")}:${String(secs).padStart(2,"0")}`;
+    }
+
+    function formatDurationShort(ms){
+      if (!Number.isFinite(ms) || ms <= 0) return "—";
+      const mins = Math.floor(ms/60000);
+      const secs = Math.floor((ms%60000)/1000);
+      if (mins === 0) return `${secs}s`;
+      return `${mins}:${String(secs).padStart(2,"0")}`;
+    }
+
+
+    function totalActiveWorkMs(){
+      let total = state.activeWorkMs || 0;
+      if(state.activeWorkStartedAt && state.running && !state.paused && !state.finished && !state.stretchOpen){
+        total += Date.now() - state.activeWorkStartedAt;
+      }
+      return total;
+    }
+
+    function commitActiveWork(){
+      if(state.activeWorkStartedAt){
+        state.activeWorkMs = (state.activeWorkMs || 0) + (Date.now() - state.activeWorkStartedAt);
+        state.activeWorkStartedAt = null;
+      }
+    }
+
+    function resumeActiveWork(){
+      if(state.running && !state.paused && !state.finished && !state.stretchOpen){
+        state.activeWorkStartedAt = Date.now();
+      }
+    }
+
+    function checkStretchDue(){
+      const sinceStretch = totalActiveWorkMs() - (state.lastStretchAtMs || 0);
+      state.stretchDue = sinceStretch >= 20 * 60 * 1000;
+      return state.stretchDue;
+    }
+
+    function openStretch(){
+      commitActiveWork();
+      state.stretchOpen = true;
+      state.stretchDue = false;
+      state.lastStretchAtMs = totalActiveWorkMs();
+      el.stretchOverlay.classList.remove("hidden");
+      saveState();
+    }
+
+    function closeStretch(){
+      if(!state.stretchOpen) return;
+      state.stretchOpen = false;
+      el.stretchOverlay.classList.add("hidden");
+      resumeActiveWork();
+      saveState();
+      updateTimerUI();
+    }
+
+    function currentElapsed(){
+      if (!state.startedAt) return 0;
+      const end = state.paused && state.pauseStartedAt ? state.pauseStartedAt : Date.now();
+      return Math.max(0, end - state.startedAt - state.pausedAccumulatedMs);
+    }
+
+    function saveState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function clearSaved(){
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    function setBodyState(name){
+      document.body.className = name;
+    }
+
+    function randomFrom(arr){
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function renderProgressList(){
+      el.progressList.innerHTML = "";
+      for(let i=0;i<state.total;i++){
+        const chip = document.createElement("div");
+        chip.className = "photo-chip";
+        if(i < state.completed) chip.classList.add("done");
+        else if(i === state.completed && !state.finished) chip.classList.add("current");
+
+        chip.innerHTML = `<span class="tick">✓</span><span class="num">${i+1}</span>`;
+        el.progressList.appendChild(chip);
+      }
+
+      const current = el.progressList.querySelector(".current");
+      if(current) current.scrollIntoView({block:"nearest", behavior:"smooth"});
+    }
+
+    function updateStats(){
+      const remaining = Math.max(0, state.total - state.completed);
+      const pct = state.total ? Math.round((state.completed/state.total)*100) : 0;
+      const avg = state.durations.length
+        ? state.durations.reduce((a,b)=>a+b,0)/state.durations.length
+        : NaN;
+      const onTarget = state.durations.length
+        ? state.durations.filter(d=>d<=state.targetMs).length / state.durations.length
+        : NaN;
+
+      el.doneStat.textContent = `${state.completed}/${state.total}`;
+      el.avgStat.textContent = Number.isFinite(avg) ? formatDurationShort(avg) : "—";
+      el.targetStat.textContent = Number.isFinite(onTarget) ? `${Math.round(onTarget*100)}%` : "—";
+      el.projectedStat.textContent = Number.isFinite(avg) ? formatDurationShort(avg * remaining) : "—";
+      el.remainingBig.textContent = remaining;
+      el.percentDone.textContent = `${pct}%`;
+
+      if(remaining === 0){
+        el.finishNote.textContent = "Batch complete.";
+      } else if(remaining <= Math.max(3, Math.ceil(state.total * .15))){
+        el.finishNote.textContent = `${remaining} left. Finish the run.`;
+      } else {
+        el.finishNote.textContent = "Keep the hand moving.";
+      }
+    }
+
+    function setMessage(pair){
+      el.message.textContent = pair[0];
+      el.submessage.textContent = pair[1];
+    }
+
+    function updateTimerUI(){
+      if(state.finished){
+        setBodyState("state-finish");
+        el.timer.classList.remove("overtime-prefix");
+        el.timer.textContent = "DONE";
+        el.timerKicker.textContent = "BATCH COMPLETE";
+        el.message.textContent = `${state.total} images finished.`;
+        const avg = state.durations.length
+          ? state.durations.reduce((a,b)=>a+b,0)/state.durations.length
+          : 0;
+        el.submessage.textContent = `Average ${formatDurationShort(avg)} per image. Stop. Take the win.`;
+        el.paceFill.style.width = "100%";
+        el.paceFill.style.background = "var(--done)";
+        el.paceText.textContent = "100%";
+        el.nextBtn.textContent = "Start another batch";
+        return;
+      }
+
+      const elapsed = currentElapsed();
+      const remainingMs = state.targetMs - elapsed;
+      const progressRatio = Math.min(1.5, elapsed / state.targetMs);
+      const remainingPhotos = state.total - state.completed;
+
+      el.timerKicker.textContent = `PHOTO ${state.completed + 1} OF ${state.total}`;
+
+      if(remainingMs > 0){
+        el.timer.classList.remove("overtime-prefix");
+        el.timer.textContent = formatTime(remainingMs);
+        el.paceText.textContent = `${Math.round(progressRatio*100)}%`;
+        el.paceFill.style.width = `${Math.min(100, progressRatio*100)}%`;
+
+        if(remainingMs <= 60000){
+          setBodyState(remainingPhotos <= Math.max(3, Math.ceil(state.total*.15)) ? "state-finish" : "state-final-minute");
+          el.paceFill.style.background = "var(--warning)";
+          const idx = Math.min(finalMinuteMessages.length-1, Math.floor((60000-remainingMs)/20000));
+          setMessage(finalMinuteMessages[idx]);
+        } else {
+          const nearFinish = remainingPhotos <= Math.max(3, Math.ceil(state.total*.15));
+          setBodyState(nearFinish ? "state-finish" : "state-normal");
+          el.paceFill.style.background = "var(--accent)";
+          if(nearFinish){
+            el.message.textContent = randomFrom(finishMessages);
+            el.submessage.textContent = `${remainingPhotos} image${remainingPhotos===1?"":"s"} left in this batch.`;
+          } else {
+            const segment = Math.min(normalMessages.length-1, Math.floor(progressRatio * normalMessages.length));
+            setMessage(normalMessages[segment]);
+          }
+        }
+      } else {
+        const overtime = Math.abs(remainingMs);
+        const deep = overtime >= 180000;
+        setBodyState(deep ? "state-overtime-deep" : "state-overtime");
+        el.timer.classList.add("overtime-prefix");
+        el.timer.textContent = formatTime(overtime, true);
+        el.paceText.textContent = `${Math.round(progressRatio*100)}%`;
+        el.paceFill.style.width = "100%";
+        el.paceFill.style.background = "var(--danger-deep)";
+
+        if(deep){
+          const idx = Math.floor(overtime / 25000) % deepOvertimeMessages.length;
+          setMessage(deepOvertimeMessages[idx]);
+        } else {
+          const idx = Math.floor(overtime / 22000) % overtimeMessages.length;
+          setMessage(overtimeMessages[idx]);
+        }
+      }
+    }
+
+    function triggerReward(){
+      const remaining = state.total - state.completed;
+      el.rewardWord.textContent =
+        remaining <= Math.max(3, Math.ceil(state.total*.15))
+          ? `${remaining} left. Keep going.`
+          : randomFrom(rewardMessages);
+
+      el.rewardFlash.classList.remove("show");
+      void el.rewardFlash.offsetWidth;
+      el.rewardFlash.classList.add("show");
+    }
+
+    function startCurrentTimer(){
+      state.startedAt = Date.now();
+      state.pauseStartedAt = null;
+      state.pausedAccumulatedMs = 0;
+      state.running = true;
+      state.paused = false;
+      state.stretchOpen = false;
+      resumeActiveWork();
+      el.pauseBtn.textContent = "Pause";
+      saveState();
+      updateTimerUI();
+    }
+
+    function completeCurrent(){
+      if(state.finished){
+        resetToSetup();
+        return;
+      }
+      if(!state.running) return;
+
+      const elapsed = currentElapsed();
+      commitActiveWork();
+      state.durations.push(elapsed);
+      state.completed += 1;
+      triggerReward();
+
+      if(state.completed >= state.total){
+        state.finished = true;
+        state.running = false;
+        state.startedAt = null;
+        state.activeWorkStartedAt = null;
+      } else {
+        state.startedAt = Date.now();
+        state.pauseStartedAt = null;
+        state.pausedAccumulatedMs = 0;
+        state.paused = false;
+      }
+
+      const shouldStretch = !state.finished && checkStretchDue();
+
+      saveState();
+      renderProgressList();
+      updateStats();
+      updateTimerUI();
+
+      if(shouldStretch){
+        openStretch();
+      } else {
+        resumeActiveWork();
+      }
+    }
+
+    function togglePause(){
+      if(state.finished || !state.running) return;
+
+      if(!state.paused){
+        commitActiveWork();
+        state.paused = true;
+        state.pauseStartedAt = Date.now();
+        el.pauseBtn.textContent = "Resume";
+        el.message.textContent = "Paused.";
+        el.submessage.textContent = "Press P or click Resume when you are back.";
+      } else {
+        const pausedFor = Date.now() - state.pauseStartedAt;
+        state.pausedAccumulatedMs += pausedFor;
+        state.pauseStartedAt = null;
+        state.paused = false;
+        el.pauseBtn.textContent = "Pause";
+        resumeActiveWork();
+      }
+      saveState();
+      updateTimerUI();
+    }
+
+    function startBatch(){
+      const total = Math.max(1, Math.min(500, parseInt(el.batchSize.value || "1", 10)));
+      const mins = Math.max(1, Math.min(60, parseFloat(el.targetMinutes.value || "5")));
+      state = {
+        batchName: el.batchName.value.trim() || "Retouch Sprint",
+        total,
+        targetMs: mins * 60 * 1000,
+        completed: 0,
+        durations: [],
+        startedAt: Date.now(),
+        pauseStartedAt: null,
+        pausedAccumulatedMs: 0,
+        running: true,
+        paused: false,
+        finished: false,
+        lastMinuteAlerted: false,
+        activeWorkMs: 0,
+        activeWorkStartedAt: Date.now(),
+        lastStretchAtMs: 0,
+        stretchDue: false,
+        stretchOpen: false
+      };
+      el.setup.classList.add("hidden");
+      el.batchLabel.textContent = state.batchName;
+      el.progressTitle.textContent = state.batchName;
+      el.nextBtn.innerHTML = '✓ Done — next image <span class="hint">Space / Enter</span>';
+      renderProgressList();
+      updateStats();
+      updateTimerUI();
+      saveState();
+    }
+
+    function resetToSetup(){
+      clearSaved();
+      state.running = false;
+      state.finished = false;
+      setBodyState("state-normal");
+      el.stretchOverlay.classList.add("hidden");
+      el.setup.classList.remove("hidden");
+      el.batchName.value = state.batchName || "";
+      el.batchSize.value = state.total || 36;
+      el.targetMinutes.value = (state.targetMs || 300000)/60000;
+    }
+
+    function restore(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return false;
+        const saved = JSON.parse(raw);
+        if(!saved || !saved.total || !saved.targetMs) return false;
+
+        state = {...state, ...saved};
+
+        // If the timer was paused when the page closed, keep it paused.
+        // Otherwise, it continues from the saved start timestamp.
+        el.setup.classList.add("hidden");
+        el.batchLabel.textContent = state.batchName || "Retouch Sprint";
+        el.progressTitle.textContent = state.batchName || "Batch progress";
+        if(state.finished){
+          el.nextBtn.textContent = "Start another batch";
+        }
+
+        // Do not count time while the page was closed. Resume active-work tracking now.
+        state.activeWorkStartedAt = null;
+        if(state.stretchOpen){
+          el.stretchOverlay.classList.remove("hidden");
+        } else {
+          el.stretchOverlay.classList.add("hidden");
+          resumeActiveWork();
+        }
+
+        renderProgressList();
+        updateStats();
+        updateTimerUI();
+        el.pauseBtn.textContent = state.paused ? "Resume" : "Pause";
+        return true;
+      }catch(e){
+        console.warn("Could not restore session", e);
+        return false;
+      }
+    }
+
+    el.startBtn.addEventListener("click", startBatch);
+    el.nextBtn.addEventListener("click", completeCurrent);
+    el.pauseBtn.addEventListener("click", togglePause);
+    el.stretchBtn.addEventListener("click", closeStretch);
+
+    document.addEventListener("keydown", (e)=>{
+      const tag = document.activeElement?.tagName;
+      if(tag === "INPUT" || tag === "TEXTAREA") return;
+
+      if(state.stretchOpen && (e.code === "Space" || e.code === "Enter")){
+        e.preventDefault();
+        closeStretch();
+        return;
+      }
+
+      if((e.code === "Space" || e.code === "Enter") && !el.setup.classList.contains("hidden")){
+        return;
+      }
+
+      if(e.code === "Space" || e.code === "Enter"){
+        e.preventDefault();
+        completeCurrent();
+      }
+
+      if(e.key.toLowerCase() === "p"){
+        e.preventDefault();
+        togglePause();
+      }
+
+      if(e.key.toLowerCase() === "r" && (e.ctrlKey || e.metaKey)){
+        // Let the browser own Cmd/Ctrl+R.
+        return;
+      }
+    });
+
+    setInterval(()=>{
+      if(state.running && !state.paused && !state.stretchOpen){
+        updateTimerUI();
+        checkStretchDue();
+      }
+    }, 250);
+
+    restore();
+  </script>
+</body>
+</html>
