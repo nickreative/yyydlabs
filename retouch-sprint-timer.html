@@ -278,9 +278,24 @@
     .photo-chip.done .tick{display:inline}
     .photo-chip.done .num{opacity:.9}
 
+    .photo-chip.review{
+      color:#3b2914;
+      border-color:rgba(156,101,35,.28);
+      background:#e8bd78;
+      transform:scale(.96);
+      font-weight:800;
+    }
+
+    .photo-chip.review .tick{display:none}
+    .photo-chip.review::before{
+      content:"↺";
+      font-size:13px;
+      margin-right:2px;
+    }
+
     .controls{
       display:grid;
-      grid-template-columns:auto minmax(260px,1fr) auto;
+      grid-template-columns:auto auto minmax(260px,1fr) auto;
       align-items:center;
       gap:12px;
     }
@@ -319,10 +334,124 @@
     }
 
     .finish-note{
-      text-align:right;
+      grid-column:1/-1;
+      text-align:center;
       color:var(--muted);
       font-size:12px;
-      min-width:116px;
+      min-width:0;
+    }
+
+    .review-section{
+      margin-top:14px;
+      padding-top:14px;
+      border-top:1px solid var(--line);
+    }
+
+    .review-section-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:8px;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.07em;
+      font-weight:800;
+      color:var(--muted);
+    }
+
+    .review-count{
+      min-width:22px;
+      height:22px;
+      padding:0 7px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      background:#e8bd78;
+      color:#3b2914;
+      font-size:11px;
+    }
+
+    .review-list{
+      display:grid;
+      gap:7px;
+      max-height:150px;
+      overflow:auto;
+    }
+
+    .review-item{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.2);
+      border-radius:10px;
+      padding:9px 10px;
+      font-size:12px;
+      line-height:1.3;
+    }
+
+    .review-item strong{
+      display:block;
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      color:var(--muted);
+      margin-bottom:3px;
+    }
+
+    .modal-overlay{
+      position:fixed;
+      inset:0;
+      z-index:40;
+      display:grid;
+      place-items:center;
+      background:rgba(20,24,21,.72);
+      backdrop-filter:blur(8px);
+      padding:24px;
+    }
+
+    .modal-card{
+      width:min(540px,100%);
+      background:#f5f2eb;
+      color:#1e2320;
+      border-radius:24px;
+      padding:26px;
+      box-shadow:0 30px 90px rgba(0,0,0,.25);
+    }
+
+    .modal-card h3{
+      margin:0;
+      font-size:30px;
+      letter-spacing:-.035em;
+    }
+
+    .modal-card p{
+      margin:10px 0 20px;
+      color:#6f746f;
+      line-height:1.45;
+      font-size:14px;
+    }
+
+    .modal-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .modal-actions button{
+      border:0;
+      min-height:50px;
+      border-radius:14px;
+      font-weight:800;
+    }
+
+    .modal-cancel{
+      background:#e6e1d8;
+      color:#1e2320;
+    }
+
+    .modal-save{
+      background:#1e2320;
+      color:white;
     }
 
     .setup{
@@ -590,7 +719,7 @@
       .timer-panel{min-height:58vh;padding:24px 16px}
       .progress-panel{max-height:240px}
       .progress-list{grid-template-columns:repeat(6,minmax(0,1fr))}
-      .controls{grid-template-columns:1fr 2fr}
+      .controls{grid-template-columns:1fr 1fr 2fr}
       .finish-note{display:none}
       .fields{grid-template-columns:1fr}
       .wide{grid-column:auto}
@@ -602,9 +731,9 @@
       .progress-list{grid-template-columns:repeat(5,minmax(0,1fr))}
       .stats{gap:6px}
       .stat{padding:7px 9px}
-      .controls{grid-template-columns:1fr}
+      .controls{grid-template-columns:1fr 1fr}
+      .primary-btn{grid-column:1/-1;order:1}
       .secondary-btn{order:2}
-      .primary-btn{order:1}
     }
   </style>
 </head>
@@ -686,18 +815,45 @@
           </div>
         </div>
         <div class="progress-list" id="progressList"></div>
+
+        <div class="review-section hidden" id="reviewSection">
+          <div class="review-section-head">
+            <span>Review later</span>
+            <span class="review-count" id="reviewCount">0</span>
+          </div>
+          <div class="review-list" id="reviewList"></div>
+        </div>
       </aside>
     </section>
 
     <footer class="controls">
       <button class="secondary-btn" id="pauseBtn">Pause</button>
+      <button class="secondary-btn" id="restartBtn">↺ Restart timer</button>
       <button class="primary-btn" id="nextBtn">
         ✓ Done — next image <span class="hint">Space / Enter</span>
       </button>
+      <button class="secondary-btn" id="reviewBtn">Review later</button>
       <div class="finish-note" id="finishNote">Keep the hand moving.</div>
     </footer>
   </main>
 
+
+
+  <section class="modal-overlay hidden" id="reviewOverlay">
+    <div class="modal-card">
+      <h3>Flag this image for review</h3>
+      <p>
+        Add the filename or a short note so you can identify it later. Saving this moves
+        you straight onto the next image without counting this one as a completed edit.
+      </p>
+      <label for="reviewText">Filename / note</label>
+      <input id="reviewText" type="text" placeholder="e.g. PRESTAT_042 — clean up ribbon edge" autocomplete="off" />
+      <div class="modal-actions">
+        <button class="modal-cancel" id="reviewCancel">Cancel</button>
+        <button class="modal-save" id="reviewSave">Save & move on</button>
+      </div>
+    </div>
+  </section>
 
   <section class="stretch-overlay hidden" id="stretchOverlay">
     <div class="stretch-card">
@@ -739,13 +895,22 @@
       remainingBig: document.getElementById("remainingBig"),
       percentDone: document.getElementById("percentDone"),
       progressList: document.getElementById("progressList"),
+      reviewSection: document.getElementById("reviewSection"),
+      reviewCount: document.getElementById("reviewCount"),
+      reviewList: document.getElementById("reviewList"),
       pauseBtn: document.getElementById("pauseBtn"),
+      restartBtn: document.getElementById("restartBtn"),
       nextBtn: document.getElementById("nextBtn"),
+      reviewBtn: document.getElementById("reviewBtn"),
       finishNote: document.getElementById("finishNote"),
       rewardFlash: document.getElementById("rewardFlash"),
       rewardWord: document.getElementById("rewardWord"),
       stretchOverlay: document.getElementById("stretchOverlay"),
       stretchBtn: document.getElementById("stretchBtn"),
+      reviewOverlay: document.getElementById("reviewOverlay"),
+      reviewText: document.getElementById("reviewText"),
+      reviewCancel: document.getElementById("reviewCancel"),
+      reviewSave: document.getElementById("reviewSave"),
     };
 
     let state = {
@@ -765,7 +930,11 @@
       activeWorkStartedAt: null,
       lastStretchAtMs: 0,
       stretchDue: false,
-      stretchOpen: false
+      stretchOpen: false,
+      reviewItems: [],
+      reviewOpen: false,
+      reviewPausedTimer: false,
+      currentElapsedSnapshot: 0
     };
 
     const normalMessages = [
@@ -862,17 +1031,134 @@
       state.stretchOpen = true;
       state.stretchDue = false;
       state.lastStretchAtMs = totalActiveWorkMs();
+
+      // The next image has already started internally; freeze it while the break is on screen.
+      if(!state.paused){
+        state.paused = true;
+        state.pauseStartedAt = Date.now();
+      }
+
+      el.pauseBtn.textContent = "Resume";
       el.stretchOverlay.classList.remove("hidden");
       saveState();
     }
 
     function closeStretch(){
       if(!state.stretchOpen) return;
+
+      if(state.paused && state.pauseStartedAt){
+        state.pausedAccumulatedMs += Date.now() - state.pauseStartedAt;
+      }
+
+      state.pauseStartedAt = null;
+      state.paused = false;
       state.stretchOpen = false;
+      el.pauseBtn.textContent = "Pause";
       el.stretchOverlay.classList.add("hidden");
       resumeActiveWork();
       saveState();
       updateTimerUI();
+    }
+
+    function restartCurrentTimer(){
+      if(state.finished || !state.running || state.stretchOpen || state.reviewOpen) return;
+
+      state.startedAt = Date.now();
+      state.pauseStartedAt = null;
+      state.pausedAccumulatedMs = 0;
+      state.paused = false;
+      el.pauseBtn.textContent = "Pause";
+      saveState();
+      updateTimerUI();
+
+      el.rewardWord.textContent = "Timer reset. Fresh five.";
+      el.rewardFlash.classList.remove("show");
+      void el.rewardFlash.offsetWidth;
+      el.rewardFlash.classList.add("show");
+    }
+
+    function openReview(){
+      if(state.finished || !state.running || state.stretchOpen) return;
+
+      commitActiveWork();
+      state.reviewOpen = true;
+      state.reviewPausedTimer = !state.paused;
+
+      if(!state.paused){
+        state.paused = true;
+        state.pauseStartedAt = Date.now();
+      }
+
+      el.reviewText.value = "";
+      el.reviewOverlay.classList.remove("hidden");
+      setTimeout(()=>el.reviewText.focus(), 0);
+      saveState();
+    }
+
+    function cancelReview(){
+      if(!state.reviewOpen) return;
+
+      if(state.reviewPausedTimer && state.paused && state.pauseStartedAt){
+        state.pausedAccumulatedMs += Date.now() - state.pauseStartedAt;
+        state.pauseStartedAt = null;
+        state.paused = false;
+        el.pauseBtn.textContent = "Pause";
+      }
+
+      state.reviewOpen = false;
+      state.reviewPausedTimer = false;
+      el.reviewOverlay.classList.add("hidden");
+      resumeActiveWork();
+      saveState();
+      updateTimerUI();
+    }
+
+    function saveReview(){
+      if(!state.reviewOpen) return;
+
+      const text = el.reviewText.value.trim() || `Photo ${state.completed + 1}`;
+      const elapsed = currentElapsed();
+
+      state.reviewItems = Array.isArray(state.reviewItems) ? state.reviewItems : [];
+      state.reviewItems.push({
+        index: state.completed,
+        label: text,
+        elapsedMs: elapsed
+      });
+
+      state.completed += 1;
+      state.reviewOpen = false;
+      state.reviewPausedTimer = false;
+      el.reviewOverlay.classList.add("hidden");
+
+      if(state.completed >= state.total){
+        state.finished = true;
+        state.running = false;
+        state.startedAt = null;
+        state.pauseStartedAt = null;
+        state.paused = false;
+        state.activeWorkStartedAt = null;
+      } else {
+        state.startedAt = Date.now();
+        state.pauseStartedAt = null;
+        state.pausedAccumulatedMs = 0;
+        state.paused = false;
+        el.pauseBtn.textContent = "Pause";
+      }
+
+      const shouldStretch = !state.finished && checkStretchDue();
+
+      saveState();
+      renderProgressList();
+      renderReviewList();
+      updateStats();
+      updateTimerUI();
+
+      if(shouldStretch){
+        openStretch();
+      } else if(!state.finished){
+        resumeActiveWork();
+      }
     }
 
     function currentElapsed(){
@@ -882,7 +1168,13 @@
     }
 
     function saveState(){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const snapshot = {
+        ...state,
+        currentElapsedSnapshot: state.startedAt ? currentElapsed() : 0,
+        activeWorkMs: totalActiveWorkMs(),
+        activeWorkStartedAt: null
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
     }
 
     function clearSaved(){
@@ -899,10 +1191,14 @@
 
     function renderProgressList(){
       el.progressList.innerHTML = "";
+      const reviewIndexes = new Set((state.reviewItems || []).map(item => item.index));
+
       for(let i=0;i<state.total;i++){
         const chip = document.createElement("div");
         chip.className = "photo-chip";
-        if(i < state.completed) chip.classList.add("done");
+
+        if(reviewIndexes.has(i)) chip.classList.add("review");
+        else if(i < state.completed) chip.classList.add("done");
         else if(i === state.completed && !state.finished) chip.classList.add("current");
 
         chip.innerHTML = `<span class="tick">✓</span><span class="num">${i+1}</span>`;
@@ -913,8 +1209,31 @@
       if(current) current.scrollIntoView({block:"nearest", behavior:"smooth"});
     }
 
+    function renderReviewList(){
+      const items = Array.isArray(state.reviewItems) ? state.reviewItems : [];
+      el.reviewCount.textContent = items.length;
+      el.reviewSection.classList.toggle("hidden", items.length === 0);
+      el.reviewList.innerHTML = items.map(item => `
+        <div class="review-item">
+          <strong>Photo ${item.index + 1}</strong>
+          ${escapeHtml(item.label)}
+        </div>
+      `).join("");
+    }
+
+    function escapeHtml(value){
+      return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
     function updateStats(){
       const remaining = Math.max(0, state.total - state.completed);
+      const reviewCount = (state.reviewItems || []).length;
+      const actuallyDone = Math.max(0, state.completed - reviewCount);
       const pct = state.total ? Math.round((state.completed/state.total)*100) : 0;
       const avg = state.durations.length
         ? state.durations.reduce((a,b)=>a+b,0)/state.durations.length
@@ -923,7 +1242,7 @@
         ? state.durations.filter(d=>d<=state.targetMs).length / state.durations.length
         : NaN;
 
-      el.doneStat.textContent = `${state.completed}/${state.total}`;
+      el.doneStat.textContent = `${actuallyDone}/${state.total}`;
       el.avgStat.textContent = Number.isFinite(avg) ? formatDurationShort(avg) : "—";
       el.targetStat.textContent = Number.isFinite(onTarget) ? `${Math.round(onTarget*100)}%` : "—";
       el.projectedStat.textContent = Number.isFinite(avg) ? formatDurationShort(avg * remaining) : "—";
@@ -931,11 +1250,11 @@
       el.percentDone.textContent = `${pct}%`;
 
       if(remaining === 0){
-        el.finishNote.textContent = "Batch complete.";
+        el.finishNote.textContent = reviewCount ? `${reviewCount} to review.` : "Batch complete.";
       } else if(remaining <= Math.max(3, Math.ceil(state.total * .15))){
         el.finishNote.textContent = `${remaining} left. Finish the run.`;
       } else {
-        el.finishNote.textContent = "Keep the hand moving.";
+        el.finishNote.textContent = reviewCount ? `${reviewCount} flagged for later.` : "Keep the hand moving.";
       }
     }
 
@@ -950,11 +1269,17 @@
         el.timer.classList.remove("overtime-prefix");
         el.timer.textContent = "DONE";
         el.timerKicker.textContent = "BATCH COMPLETE";
-        el.message.textContent = `${state.total} images finished.`;
+        const reviews = (state.reviewItems || []).length;
+        const finishedCount = state.total - reviews;
+        el.message.textContent = reviews
+          ? `${finishedCount} finished. ${reviews} flagged for review.`
+          : `${state.total} images finished.`;
         const avg = state.durations.length
           ? state.durations.reduce((a,b)=>a+b,0)/state.durations.length
           : 0;
-        el.submessage.textContent = `Average ${formatDurationShort(avg)} per image. Stop. Take the win.`;
+        el.submessage.textContent = reviews
+          ? `Sprint complete. Your review list is on the right. Average completed edit: ${formatDurationShort(avg)}.`
+          : `Average ${formatDurationShort(avg)} per image. Stop. Take the win.`;
         el.paceFill.style.width = "100%";
         el.paceFill.style.background = "var(--done)";
         el.paceText.textContent = "100%";
@@ -1118,13 +1443,18 @@
         activeWorkStartedAt: Date.now(),
         lastStretchAtMs: 0,
         stretchDue: false,
-        stretchOpen: false
+        stretchOpen: false,
+        reviewItems: [],
+        reviewOpen: false,
+        reviewPausedTimer: false,
+        currentElapsedSnapshot: 0
       };
       el.setup.classList.add("hidden");
       el.batchLabel.textContent = state.batchName;
       el.progressTitle.textContent = state.batchName;
       el.nextBtn.innerHTML = '✓ Done — next image <span class="hint">Space / Enter</span>';
       renderProgressList();
+      renderReviewList();
       updateStats();
       updateTimerUI();
       saveState();
@@ -1136,6 +1466,7 @@
       state.finished = false;
       setBodyState("state-normal");
       el.stretchOverlay.classList.add("hidden");
+      el.reviewOverlay.classList.add("hidden");
       el.setup.classList.remove("hidden");
       el.batchName.value = state.batchName || "";
       el.batchSize.value = state.total || 36;
@@ -1150,26 +1481,46 @@
         if(!saved || !saved.total || !saved.targetMs) return false;
 
         state = {...state, ...saved};
+        state.reviewItems = Array.isArray(state.reviewItems) ? state.reviewItems : [];
+        state.reviewOpen = false;
+        state.reviewPausedTimer = false;
 
-        // If the timer was paused when the page closed, keep it paused.
-        // Otherwise, it continues from the saved start timestamp.
         el.setup.classList.add("hidden");
+        el.reviewOverlay.classList.add("hidden");
         el.batchLabel.textContent = state.batchName || "Retouch Sprint";
         el.progressTitle.textContent = state.batchName || "Batch progress";
+
         if(state.finished){
           el.nextBtn.textContent = "Start another batch";
-        }
-
-        // Do not count time while the page was closed. Resume active-work tracking now.
-        state.activeWorkStartedAt = null;
-        if(state.stretchOpen){
-          el.stretchOverlay.classList.remove("hidden");
+          state.startedAt = null;
+          state.paused = false;
+          state.pauseStartedAt = null;
         } else {
-          el.stretchOverlay.classList.add("hidden");
-          resumeActiveWork();
+          // Rebuild from the last saved elapsed time. Closed-tab time never counts.
+          const elapsed = Number(saved.currentElapsedSnapshot || 0);
+          state.startedAt = Date.now() - elapsed;
+          state.pausedAccumulatedMs = 0;
+          state.pauseStartedAt = null;
+          state.activeWorkMs = Number(saved.activeWorkMs || 0);
+          state.activeWorkStartedAt = null;
+
+          if(state.stretchOpen){
+            state.paused = true;
+            state.pauseStartedAt = Date.now();
+            el.stretchOverlay.classList.remove("hidden");
+          } else if(saved.paused){
+            state.paused = true;
+            state.pauseStartedAt = Date.now();
+            el.stretchOverlay.classList.add("hidden");
+          } else {
+            state.paused = false;
+            el.stretchOverlay.classList.add("hidden");
+            resumeActiveWork();
+          }
         }
 
         renderProgressList();
+        renderReviewList();
         updateStats();
         updateTimerUI();
         el.pauseBtn.textContent = state.paused ? "Resume" : "Pause";
@@ -1183,10 +1534,25 @@
     el.startBtn.addEventListener("click", startBatch);
     el.nextBtn.addEventListener("click", completeCurrent);
     el.pauseBtn.addEventListener("click", togglePause);
+    el.restartBtn.addEventListener("click", restartCurrentTimer);
+    el.reviewBtn.addEventListener("click", openReview);
+    el.reviewCancel.addEventListener("click", cancelReview);
+    el.reviewSave.addEventListener("click", saveReview);
     el.stretchBtn.addEventListener("click", closeStretch);
+
+    el.reviewText.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        saveReview();
+      } else if(e.key === "Escape"){
+        e.preventDefault();
+        cancelReview();
+      }
+    });
 
     document.addEventListener("keydown", (e)=>{
       const tag = document.activeElement?.tagName;
+      if(state.reviewOpen) return;
       if(tag === "INPUT" || tag === "TEXTAREA") return;
 
       if(state.stretchOpen && (e.code === "Space" || e.code === "Enter")){
@@ -1216,11 +1582,19 @@
     });
 
     setInterval(()=>{
-      if(state.running && !state.paused && !state.stretchOpen){
+      if(state.running && !state.paused && !state.stretchOpen && !state.reviewOpen){
         updateTimerUI();
         checkStretchDue();
       }
     }, 250);
+
+    document.addEventListener("visibilitychange", ()=>{
+      if(document.visibilityState === "hidden" && (state.running || state.finished)) saveState();
+    });
+
+    window.addEventListener("beforeunload", ()=>{
+      if(state.running || state.finished) saveState();
+    });
 
     restore();
   </script>
