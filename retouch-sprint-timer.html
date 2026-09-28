@@ -1310,7 +1310,16 @@
           setBodyState(nearFinish ? "state-finish" : "state-normal");
           el.paceFill.style.background = "var(--accent)";
           if(nearFinish){
-            el.message.textContent = randomFrom(finishMessages);
+            // Keep the encouragement stable for the whole image.
+            // It changes only when completed/deferred progress advances to the next image.
+            const finishIndex = Math.max(
+              0,
+              Math.min(
+                finishMessages.length - 1,
+                (state.completed - Math.max(0, state.total - Math.ceil(state.total * .15))) % finishMessages.length
+              )
+            );
+            el.message.textContent = finishMessages[finishIndex];
             el.submessage.textContent = `${remainingPhotos} image${remainingPhotos===1?"":"s"} left in this batch.`;
           } else {
             const segment = Math.min(normalMessages.length-1, Math.floor(progressRatio * normalMessages.length));
